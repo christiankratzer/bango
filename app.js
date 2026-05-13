@@ -150,12 +150,9 @@ function resolveVoice() {
   return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
 }
 
-function speakNumber(numStr) {
+function speak(text) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-  const text = state.mode === 'digits'
-    ? numStr.split('').join('、 ')
-    : numStr;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ja-JP';
   const voice = resolveVoice();
@@ -164,14 +161,111 @@ function speakNumber(numStr) {
   speechSynthesis.speak(u);
 }
 
-function generateNumber(length) {
+// --- Random helpers ---
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function randDigits(n) {
   let s = '';
-  const firstMin = state.mode === 'full' && length > 1 ? 1 : 0;
-  s += Math.floor(Math.random() * (10 - firstMin)) + firstMin;
-  for (let i = 1; i < length; i++) {
-    s += Math.floor(Math.random() * 10);
-  }
+  for (let i = 0; i < n; i++) s += randInt(0, 9);
   return s;
+}
+function pad2(n) { return String(n).padStart(2, '0'); }
+function daysInMonth(m) {
+  return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
+}
+
+const WEEKDAY_KANJI = ['日', '月', '火', '水', '木', '金', '土'];
+
+// --- Challenge generators ---
+// Each returns { speech, answer, display }.
+function challengeNumber(length, asDigits) {
+  let s = '';
+  const firstMin = !asDigits && length > 1 ? 1 : 0;
+  s += randInt(firstMin, 9);
+  for (let i = 1; i < length; i++) s += randInt(0, 9);
+  return {
+    speech: asDigits ? s.split('').join('、 ') : s,
+    answer: s,
+    display: s,
+  };
+}
+
+function challengePhone() {
+  // Mobile (11 digits, 0X0-XXXX-XXXX) or landline (10 digits, 0X-XXXX-XXXX).
+  const mobile = Math.random() < 0.5;
+  let phone, groups;
+  if (mobile) {
+    const prefix = ['090', '080', '070'][randInt(0, 2)];
+    phone = prefix + randDigits(4) + randDigits(4);
+    groups = [phone.slice(0, 3), phone.slice(3, 7), phone.slice(7)];
+  } else {
+    const prefix = ['03', '06'][randInt(0, 1)];
+    phone = prefix + randDigits(4) + randDigits(4);
+    groups = [phone.slice(0, 2), phone.slice(2, 6), phone.slice(6)];
+  }
+  return {
+    speech: groups.map(g => g.split('').join('、 ')).join(' の '),
+    answer: phone,
+    display: groups.join('-'),
+  };
+}
+
+function challengeDate() {
+  const m = randInt(1, 12);
+  const d = randInt(1, daysInMonth(m));
+  return {
+    speech: `${m}月${d}日`,
+    answer: pad2(m) + pad2(d),
+    display: `${m}月${d}日`,
+  };
+}
+
+function challengeMonth() {
+  const m = randInt(1, 12);
+  return { speech: `${m}月`, answer: String(m), display: `${m}月` };
+}
+
+function challengeWeekday() {
+  const i = randInt(0, 6);
+  return {
+    speech: `${WEEKDAY_KANJI[i]}曜日`,
+    answer: String(i),
+    display: `${WEEKDAY_KANJI[i]}曜日`,
+  };
+}
+
+function generateChallenge() {
+  switch (state.mode) {
+    case 'digits':   return challengeNumber(state.digitCount, true);
+    case 'full':     return challengeNumber(state.digitCount, false);
+    case 'phone':    return challengePhone();
+    case 'date':     return challengeDate();
+    case 'months':   return challengeMonth();
+    case 'weekdays': return challengeWeekday();
+    default:         return challengeNumber(state.digitCount, true);
+  }
+}
+
+function isWeekdayMode() { return state.mode === 'weekdays'; }
+
+function maxLengthForMode() {
+  switch (state.mode) {
+    case 'phone': return 11;
+    case 'date': return 4;
+    case 'months': return 2;
+    case 'weekdays': return 1;
+    default: return state.digitCount;
+  }
+}
+
+function placeholderForMode() {
+  switch (state.mode) {
+    case 'date': return 'MMDD';
+    case 'phone': return '11 digits';
+    case 'months': return '1–12';
+    default: return '';
+  }
 }
 
 function showScreen(id) {
@@ -182,21 +276,34 @@ function showScreen(id) {
 function startSession(opts) {
   state.mode = opts.mode;
   state.rate = opts.rate;
+  state.digitCount = opts.digitCount;
   state.queue = [];
   for (let i = 0; i < opts.sequenceLength; i++) {
-    state.queue.push(generateNumber(opts.digitCount));
+    state.queue.push(generateChallenge());
   }
   state.total = opts.sequenceLength;
   state.mistakes = 0;
   state.startTime = Date.now();
 
   showScreen('trainer-screen');
-  $('answer-input').value = '';
+  configureTrainerInput();
   $('feedback').textContent = '';
   $('feedback').className = 'feedback';
-  // Speak the first number synchronously so iOS keeps the user-gesture
-  // permission. Subsequent numbers are fine from a timer.
+  // First speak runs synchronously to keep iOS user-gesture permission;
+  // subsequent ones are fine from a timer.
   nextNumber(true);
+}
+
+function configureTrainerInput() {
+  const isWeekday = isWeekdayMode();
+  $('answer-form').classList.toggle('hidden', isWeekday);
+  $('weekday-input').classList.toggle('hidden', !isWeekday);
+  if (!isWeekday) {
+    const input = $('answer-input');
+    input.value = '';
+    input.maxLength = maxLengthForMode();
+    input.placeholder = placeholderForMode();
+  }
 }
 
 function nextNumber(immediate = false) {
@@ -207,33 +314,36 @@ function nextNumber(immediate = false) {
   state.current = state.queue[0];
   const done = state.total - state.queue.length;
   $('progress-text').textContent = `${done} / ${state.total}`;
-  $('answer-input').value = '';
   $('feedback').textContent = '';
   $('feedback').className = 'feedback';
-  $('answer-input').focus();
+  if (!isWeekdayMode()) {
+    $('answer-input').value = '';
+    $('answer-input').focus();
+  }
   if (immediate) {
-    speakNumber(state.current);
+    speak(state.current.speech);
   } else {
-    setTimeout(() => speakNumber(state.current), 200);
+    setTimeout(() => speak(state.current.speech), 200);
   }
 }
 
 function handleAnswer(answer) {
-  const correct = state.current;
-  if (answer === correct) {
+  const ch = state.current;
+  if (answer === ch.answer) {
     state.queue.shift();
     playCorrect();
-    $('feedback').textContent = '✓ ' + correct;
+    $('feedback').textContent = '✓ ' + ch.display;
     $('feedback').className = 'feedback good';
     setTimeout(nextNumber, 800);
   } else {
     state.mistakes++;
     state.queue.push(state.queue.shift());
     playIncorrect();
-    $('feedback').textContent = `✗ was ${correct}`;
+    $('feedback').textContent = `✗ was ${ch.display}`;
     $('feedback').className = 'feedback bad';
-    $('answer-input').classList.add('shake');
-    setTimeout(() => $('answer-input').classList.remove('shake'), 400);
+    const target = isWeekdayMode() ? $('weekday-input') : $('answer-input');
+    target.classList.add('shake');
+    setTimeout(() => target.classList.remove('shake'), 400);
     setTimeout(nextNumber, 1600);
   }
 }
@@ -254,10 +364,24 @@ $('setup-form').addEventListener('submit', (e) => {
   const opts = {
     digitCount: Math.max(1, Math.min(12, parseInt($('digit-count').value, 10) || 4)),
     sequenceLength: Math.max(1, Math.min(50, parseInt($('sequence-length').value, 10) || 10)),
-    mode: document.querySelector('input[name="mode"]:checked').value,
+    mode: $('mode-select').value,
     rate: parseFloat($('rate').value) || 0.9,
   };
   startSession(opts);
+});
+
+function syncDigitCountVisibility() {
+  const mode = $('mode-select').value;
+  const showDigits = mode === 'digits' || mode === 'full';
+  $('digit-count-row').classList.toggle('hidden', !showDigits);
+}
+$('mode-select').addEventListener('change', syncDigitCountVisibility);
+syncDigitCountVisibility();
+
+document.querySelectorAll('.day-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    handleAnswer(btn.dataset.day);
+  });
 });
 
 $('answer-form').addEventListener('submit', (e) => {
@@ -268,8 +392,8 @@ $('answer-form').addEventListener('submit', (e) => {
 });
 
 $('replay-btn').addEventListener('click', () => {
-  if (state.current) speakNumber(state.current);
-  $('answer-input').focus();
+  if (state.current) speak(state.current.speech);
+  if (!isWeekdayMode()) $('answer-input').focus();
 });
 
 $('quit-btn').addEventListener('click', () => {

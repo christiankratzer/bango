@@ -23,24 +23,24 @@
     <section id="setup-screen" class="screen">
       <form id="setup-form">
         <label>
+          <span>Mode</span>
+          <select id="mode-select">
+            <option value="digits">Digit by digit (phone-number style)</option>
+            <option value="full">Full number (price style)</option>
+            <option value="phone">Phone number (XX-XXXX-XXXX)</option>
+            <option value="date">Date (X月X日)</option>
+            <option value="months">Months (1月–12月)</option>
+            <option value="weekdays">Weekdays (日月火水木金土)</option>
+          </select>
+        </label>
+        <label id="digit-count-row">
           <span>Digits per number</span>
           <input type="number" id="digit-count" min="1" max="12" value="4" inputmode="numeric">
         </label>
         <label>
-          <span>How many numbers</span>
+          <span>How many in a round</span>
           <input type="number" id="sequence-length" min="1" max="50" value="10" inputmode="numeric">
         </label>
-        <fieldset>
-          <legend>Reading style</legend>
-          <label class="radio">
-            <input type="radio" name="mode" value="digits" checked>
-            <span>Digit by digit (phone-number style)</span>
-          </label>
-          <label class="radio">
-            <input type="radio" name="mode" value="full">
-            <span>Full number (price style)</span>
-          </label>
-        </fieldset>
         <label>
           <span>Voice</span>
           <select id="voice-select"></select>
@@ -62,6 +62,15 @@
         <input type="tel" id="answer-input" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
         <button type="submit">Submit</button>
       </form>
+      <div id="weekday-input" class="weekday-grid hidden">
+        <button type="button" class="day-btn" data-day="0"><span class="kanji">日</span><span class="romaji">Sun</span></button>
+        <button type="button" class="day-btn" data-day="1"><span class="kanji">月</span><span class="romaji">Mon</span></button>
+        <button type="button" class="day-btn" data-day="2"><span class="kanji">火</span><span class="romaji">Tue</span></button>
+        <button type="button" class="day-btn" data-day="3"><span class="kanji">水</span><span class="romaji">Wed</span></button>
+        <button type="button" class="day-btn" data-day="4"><span class="kanji">木</span><span class="romaji">Thu</span></button>
+        <button type="button" class="day-btn" data-day="5"><span class="kanji">金</span><span class="romaji">Fri</span></button>
+        <button type="button" class="day-btn" data-day="6"><span class="kanji">土</span><span class="romaji">Sat</span></button>
+      </div>
       <div id="feedback" class="feedback"></div>
       <button type="button" id="quit-btn" class="quit">End session</button>
     </section>

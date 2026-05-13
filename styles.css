@@ -224,6 +224,48 @@ button.quit {
   80% { transform: translateX(6px); }
 }
 
+.weekday-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.day-btn {
+  padding: 14px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--input-bg);
+  color: var(--fg);
+  border: 1px solid transparent;
+  font-weight: 500;
+}
+
+.day-btn:active,
+.day-btn:focus-visible {
+  background: var(--accent);
+  color: white;
+  outline: none;
+}
+
+.day-btn .kanji {
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.day-btn .romaji {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.day-btn:active .romaji,
+.day-btn:focus-visible .romaji {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 #done-screen h2 {
   margin: 0;
   text-align: center;
