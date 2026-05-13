@@ -194,10 +194,12 @@ function startSession(opts) {
   $('answer-input').value = '';
   $('feedback').textContent = '';
   $('feedback').className = 'feedback';
-  nextNumber();
+  // Speak the first number synchronously so iOS keeps the user-gesture
+  // permission. Subsequent numbers are fine from a timer.
+  nextNumber(true);
 }
 
-function nextNumber() {
+function nextNumber(immediate = false) {
   if (state.queue.length === 0) {
     finishSession();
     return;
@@ -209,7 +211,11 @@ function nextNumber() {
   $('feedback').textContent = '';
   $('feedback').className = 'feedback';
   $('answer-input').focus();
-  setTimeout(() => speakNumber(state.current), 200);
+  if (immediate) {
+    speakNumber(state.current);
+  } else {
+    setTimeout(() => speakNumber(state.current), 200);
+  }
 }
 
 function handleAnswer(answer) {
