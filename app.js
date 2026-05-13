@@ -235,6 +235,35 @@ function challengePrice() {
   };
 }
 
+function challengeYear() {
+  // Weighted toward recent years (more useful conversationally),
+  // with a tail back to 1900 for variety.
+  const r = Math.random();
+  let y;
+  if (r < 0.6) y = randInt(2000, 2030);
+  else if (r < 0.85) y = randInt(1950, 1999);
+  else y = randInt(1900, 1949);
+  return { speech: `${y}年`, answer: String(y), display: `${y}年` };
+}
+
+function challengeFloor() {
+  // 1階 ikkai, 3階 sangai, 6階 rokkai, 8階 hakkai, 10階 jukkai are the
+  // tricky ones — keep most prompts in 1-10 to drill those, with a tail
+  // up to 30 for hotel/department-store realism.
+  const r = Math.random();
+  const f = r < 0.7 ? randInt(1, 10) : randInt(11, 30);
+  return { speech: `${f}階`, answer: String(f), display: `${f}階` };
+}
+
+// Counters that have meaningful sandhi or irregular readings.
+const COUNTERS = ['個', '人', '枚', '本'];
+
+function challengeCounter() {
+  const c = COUNTERS[randInt(0, COUNTERS.length - 1)];
+  const n = randInt(1, 10);
+  return { speech: `${n}${c}`, answer: String(n), display: `${n}${c}` };
+}
+
 function challengeTime() {
   const h = randInt(1, 23);
   const r = Math.random();
@@ -271,6 +300,9 @@ function generateChallenge() {
     case 'price':    return challengePrice();
     case 'time':     return challengeTime();
     case 'date':     return challengeDate();
+    case 'year':     return challengeYear();
+    case 'floor':    return challengeFloor();
+    case 'counter':  return challengeCounter();
     case 'months':   return challengeMonth();
     case 'weekdays': return challengeWeekday();
     default:         return challengeNumber(state.digitCount, true);
@@ -283,8 +315,11 @@ function maxLengthForMode() {
   switch (state.mode) {
     case 'phone': return 11;
     case 'price': return 5;
+    case 'year': return 4;
     case 'time': return 4;
     case 'date': return 4;
+    case 'floor': return 2;
+    case 'counter': return 2;
     case 'months': return 2;
     case 'weekdays': return 1;
     default: return state.digitCount;
@@ -296,6 +331,9 @@ function placeholderForMode() {
     case 'date': return 'MMDD';
     case 'time': return 'HHMM';
     case 'price': return 'yen';
+    case 'year': return 'year';
+    case 'floor': return 'floor';
+    case 'counter': return 'count';
     case 'phone': return '10 or 11 digits';
     case 'months': return '1–12';
     default: return '';
@@ -361,14 +399,12 @@ function nextNumber(immediate = false) {
   }
 }
 
-// Accept user-friendly variants: strip non-digits, and drop leading zeros for
-// modes where zero-padding is just our canonical form (time/date/months).
+// Accept user-friendly variants: strip non-digits everywhere, and drop
+// leading zeros except for phone (real phone numbers start with 0).
 function normalizeAnswer(input) {
   const digits = String(input).replace(/\D/g, '');
-  if (state.mode === 'time' || state.mode === 'date' || state.mode === 'months') {
-    return digits.replace(/^0+/, '') || '0';
-  }
-  return digits;
+  if (state.mode === 'phone') return digits;
+  return digits.replace(/^0+/, '') || '0';
 }
 
 function handleAnswer(answer) {
