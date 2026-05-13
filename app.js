@@ -221,6 +221,34 @@ function challengeDate() {
   };
 }
 
+function challengePrice() {
+  // Weighted by magnitude so all three ranges get practiced.
+  const r = Math.random();
+  let amt;
+  if (r < 0.40) amt = randInt(100, 999);          // convenience-store range
+  else if (r < 0.75) amt = randInt(1000, 9999);   // restaurant / shopping
+  else amt = randInt(10000, 99999);               // hotel / bigger purchases
+  return {
+    speech: `${amt}円`,
+    answer: String(amt),
+    display: `¥${amt.toLocaleString()}`,
+  };
+}
+
+function challengeTime() {
+  const h = randInt(1, 23);
+  const r = Math.random();
+  let m, speech;
+  if (r < 0.30) { m = 0;  speech = `${h}時`; }       // exact hour
+  else if (r < 0.50) { m = 30; speech = `${h}時半`; } // half past
+  else { m = randInt(1, 59); speech = `${h}時${m}分`; }
+  return {
+    speech,
+    answer: pad2(h) + pad2(m),
+    display: `${h}:${pad2(m)}`,
+  };
+}
+
 function challengeMonth() {
   const m = randInt(1, 12);
   return { speech: `${m}月`, answer: String(m), display: `${m}月` };
@@ -240,6 +268,8 @@ function generateChallenge() {
     case 'digits':   return challengeNumber(state.digitCount, true);
     case 'full':     return challengeNumber(state.digitCount, false);
     case 'phone':    return challengePhone();
+    case 'price':    return challengePrice();
+    case 'time':     return challengeTime();
     case 'date':     return challengeDate();
     case 'months':   return challengeMonth();
     case 'weekdays': return challengeWeekday();
@@ -252,6 +282,8 @@ function isWeekdayMode() { return state.mode === 'weekdays'; }
 function maxLengthForMode() {
   switch (state.mode) {
     case 'phone': return 11;
+    case 'price': return 5;
+    case 'time': return 4;
     case 'date': return 4;
     case 'months': return 2;
     case 'weekdays': return 1;
@@ -262,7 +294,9 @@ function maxLengthForMode() {
 function placeholderForMode() {
   switch (state.mode) {
     case 'date': return 'MMDD';
-    case 'phone': return '11 digits';
+    case 'time': return 'HHMM';
+    case 'price': return 'yen';
+    case 'phone': return '10 or 11 digits';
     case 'months': return '1–12';
     default: return '';
   }
