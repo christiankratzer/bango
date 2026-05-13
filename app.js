@@ -110,6 +110,17 @@ function playIncorrect() {
   playTone(220, 0.28, 'square', 0, 0.18);
 }
 
+function resolveVoice() {
+  if (!('speechSynthesis' in window)) return null;
+  const targetName = state.voice ? state.voice.name : null;
+  const voices = speechSynthesis.getVoices();
+  if (targetName) {
+    const match = voices.find(v => v.name === targetName);
+    if (match) return match;
+  }
+  return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
+}
+
 function speakNumber(numStr) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
@@ -117,8 +128,9 @@ function speakNumber(numStr) {
     ? numStr.split('').join('、 ')
     : numStr;
   const u = new SpeechSynthesisUtterance(text);
-  if (state.voice) u.voice = state.voice;
   u.lang = 'ja-JP';
+  const voice = resolveVoice();
+  if (voice) u.voice = voice;
   u.rate = state.rate;
   speechSynthesis.speak(u);
 }
@@ -246,8 +258,9 @@ $('voice-select').addEventListener('change', (e) => {
     ensureAudio();
     speechSynthesis.cancel();
     const sample = new SpeechSynthesisUtterance('一二三');
-    sample.voice = state.voice;
     sample.lang = 'ja-JP';
+    const v = resolveVoice();
+    if (v) sample.voice = v;
     sample.rate = parseFloat($('rate').value) || 0.9;
     speechSynthesis.speak(sample);
   }
