@@ -1,0 +1,220 @@
+:root {
+  --bg: #1a1a2e;
+  --fg: #f4f4f9;
+  --accent: #e94560;
+  --muted: #8a8aa3;
+  --card: #232342;
+  --good: #2ecc71;
+  --bad: #e94560;
+  --input-bg: #14142b;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f7fa;
+    --fg: #1a1a2e;
+    --accent: #d63d54;
+    --muted: #6a6a80;
+    --card: #ffffff;
+    --input-bg: #f0f0f5;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.7em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.warning {
+  background: #ffcc00;
+  color: #1a1a2e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.hidden { display: none !important; }
+
+.screen {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+label > span { color: var(--muted); }
+
+input[type="number"],
+input[type="tel"] {
+  font-size: 1.4rem;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--input-bg);
+  color: var(--fg);
+  width: 100%;
+  font-family: inherit;
+}
+
+input[type="number"]:focus,
+input[type="tel"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input[type="tel"] {
+  font-size: 2.4rem;
+  text-align: center;
+  letter-spacing: 0.25em;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+fieldset {
+  border: 1px solid var(--muted);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+legend {
+  color: var(--muted);
+  padding: 0 6px;
+  font-size: 0.9rem;
+}
+
+.radio {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+}
+
+.radio > span { color: var(--fg); }
+
+button {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+}
+
+button:active { transform: scale(0.98); }
+
+button.replay {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 1rem;
+  padding: 10px 14px;
+  align-self: center;
+  min-width: 140px;
+}
+
+button.quit {
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 8px;
+  text-decoration: underline;
+  align-self: center;
+}
+
+.progress {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+#answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback {
+  min-height: 1.6em;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.feedback.good { color: var(--good); }
+.feedback.bad { color: var(--bad); }
+
+.shake { animation: shake 0.4s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+#done-screen h2 {
+  margin: 0;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+#stats { text-align: center; color: var(--muted); margin: 0; }

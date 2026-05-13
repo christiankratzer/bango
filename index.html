@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Bango — Japanese Numbers Trainer</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>番号<span class="subtitle">bango</span></h1>
+    </header>
+
+    <div id="voice-warning" class="warning hidden">
+      No Japanese voice found on this device. Speech may sound wrong or be missing entirely.
+    </div>
+
+    <section id="setup-screen" class="screen">
+      <form id="setup-form">
+        <label>
+          <span>Digits per number</span>
+          <input type="number" id="digit-count" min="1" max="12" value="4" inputmode="numeric">
+        </label>
+        <label>
+          <span>How many numbers</span>
+          <input type="number" id="sequence-length" min="1" max="50" value="10" inputmode="numeric">
+        </label>
+        <fieldset>
+          <legend>Reading style</legend>
+          <label class="radio">
+            <input type="radio" name="mode" value="digits" checked>
+            <span>Digit by digit (phone-number style)</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="mode" value="full">
+            <span>Full number (price style)</span>
+          </label>
+        </fieldset>
+        <label>
+          <span>Speech speed: <output id="rate-out">0.9</output>×</span>
+          <input type="range" id="rate" min="0.6" max="1.2" step="0.05" value="0.9">
+        </label>
+        <button type="submit" id="start-btn">Start</button>
+      </form>
+    </section>
+
+    <section id="trainer-screen" class="screen hidden">
+      <div class="progress">
+        <span id="progress-text">0 / 0</span>
+      </div>
+      <button type="button" id="replay-btn" class="replay">▶ Replay</button>
+      <form id="answer-form" autocomplete="off">
+        <input type="tel" id="answer-input" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+        <button type="submit">Submit</button>
+      </form>
+      <div id="feedback" class="feedback"></div>
+      <button type="button" id="quit-btn" class="quit">End session</button>
+    </section>
+
+    <section id="done-screen" class="screen hidden">
+      <h2>Done!</h2>
+      <p id="stats"></p>
+      <button type="button" id="again-btn">Again</button>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

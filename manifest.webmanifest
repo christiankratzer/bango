@@ -1,0 +1,20 @@
+{
+  "name": "Bango — Japanese Numbers Trainer",
+  "short_name": "Bango",
+  "description": "Train your ear for spoken Japanese numbers.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
