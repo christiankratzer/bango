@@ -101,13 +101,42 @@ function playTone(freq, duration, type = 'sine', delay = 0, peakGain = 0.25) {
   osc.stop(t0 + duration + 0.02);
 }
 
+// Bell-like tone: fundamental + 2nd harmonic at lower gain, longer decay.
+function playBell(freq, duration, delay = 0, peakGain = 0.22) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime + delay;
+  [
+    { f: freq, g: peakGain, type: 'sine' },
+    { f: freq * 2.01, g: peakGain * 0.28, type: 'sine' },
+    { f: freq * 3.0, g: peakGain * 0.10, type: 'triangle' },
+  ].forEach(({ f, g, type }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(f, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(g, t0 + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.02);
+  });
+}
+
 function playCorrect() {
-  playTone(660, 0.14, 'sine', 0);
-  playTone(990, 0.20, 'sine', 0.10);
+  // C-major arpeggio resolving up an octave: C5, E5, G5, C6.
+  playBell(523.25, 0.45, 0.00);
+  playBell(659.25, 0.45, 0.07);
+  playBell(783.99, 0.50, 0.14);
+  playBell(1046.50, 0.70, 0.22, 0.26);
+  // Haptic — Android only; iOS Safari ignores this.
+  if (navigator.vibrate) navigator.vibrate([40, 30, 90]);
 }
 
 function playIncorrect() {
   playTone(220, 0.28, 'square', 0, 0.18);
+  if (navigator.vibrate) navigator.vibrate(120);
 }
 
 function resolveVoice() {
