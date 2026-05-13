@@ -58,6 +58,11 @@ header h1 {
   text-transform: uppercase;
 }
 
+.flag {
+  font-size: 1.6rem;
+  vertical-align: 0.18em;
+}
+
 .warning {
   background: #ffcc00;
   color: #1a1a2e;
@@ -88,8 +93,9 @@ label {
 label > span { color: var(--muted); }
 
 input[type="number"],
-input[type="tel"] {
-  font-size: 1.4rem;
+input[type="tel"],
+select {
+  font-size: 1.1rem;
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid transparent;
@@ -97,12 +103,19 @@ input[type="tel"] {
   color: var(--fg);
   width: 100%;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 input[type="number"]:focus,
-input[type="tel"]:focus {
+input[type="tel"]:focus,
+select:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+input[type="number"] {
+  font-size: 1.4rem;
 }
 
 input[type="tel"] {

@@ -11,24 +11,67 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
-function pickJapaneseVoice() {
+// Web Speech API has no standard gender field — infer from known voice names.
+const FEMALE_HINTS = [
+  'kyoko', 'haruka', 'ayumi', 'sayaka', 'o-ren', 'oren',
+  'nanami', 'mizuki', 'female', '女', 'google 日本語',
+];
+const MALE_HINTS = ['otoya', 'hattori', 'ichiro', 'keita', 'male', '男'];
+
+function classify(name) {
+  const n = name.toLowerCase();
+  if (FEMALE_HINTS.some(h => n.includes(h))) return 'female';
+  if (MALE_HINTS.some(h => n.includes(h))) return 'male';
+  return 'unknown';
+}
+
+let availableVoices = [];
+
+function populateVoices() {
   if (!('speechSynthesis' in window)) {
     $('voice-warning').textContent = 'This browser does not support speech synthesis.';
     $('voice-warning').classList.remove('hidden');
     return;
   }
-  const voices = speechSynthesis.getVoices();
-  state.voice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
-  if (state.voice) {
-    $('voice-warning').classList.add('hidden');
-  } else if (voices.length > 0) {
+  const all = speechSynthesis.getVoices();
+  availableVoices = all.filter(v => v.lang && v.lang.toLowerCase().startsWith('ja'));
+  const select = $('voice-select');
+  select.innerHTML = '';
+
+  if (availableVoices.length === 0) {
     $('voice-warning').classList.remove('hidden');
+    select.disabled = true;
+    const opt = document.createElement('option');
+    opt.textContent = '(no Japanese voice available)';
+    select.appendChild(opt);
+    state.voice = null;
+    return;
   }
+
+  $('voice-warning').classList.add('hidden');
+  select.disabled = false;
+
+  availableVoices.forEach((v, i) => {
+    const g = classify(v.name);
+    const tag = g === 'female' ? ' ♀' : g === 'male' ? ' ♂' : '';
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = `${v.name}${tag}`;
+    select.appendChild(opt);
+  });
+
+  const saved = localStorage.getItem('bango.voice');
+  let idx = saved ? availableVoices.findIndex(v => v.name === saved) : -1;
+  if (idx === -1) idx = availableVoices.findIndex(v => classify(v.name) === 'female');
+  if (idx === -1) idx = availableVoices.findIndex(v => classify(v.name) !== 'male');
+  if (idx === -1) idx = 0;
+  select.value = String(idx);
+  state.voice = availableVoices[idx];
 }
 
 if ('speechSynthesis' in window) {
-  pickJapaneseVoice();
-  speechSynthesis.onvoiceschanged = pickJapaneseVoice;
+  populateVoices();
+  speechSynthesis.onvoiceschanged = populateVoices;
 }
 
 let audioCtx = null;
@@ -193,6 +236,21 @@ $('again-btn').addEventListener('click', () => {
 
 $('rate').addEventListener('input', (e) => {
   $('rate-out').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+$('voice-select').addEventListener('change', (e) => {
+  const idx = parseInt(e.target.value, 10);
+  state.voice = availableVoices[idx] || null;
+  if (state.voice) {
+    try { localStorage.setItem('bango.voice', state.voice.name); } catch {}
+    ensureAudio();
+    speechSynthesis.cancel();
+    const sample = new SpeechSynthesisUtterance('一二三');
+    sample.voice = state.voice;
+    sample.lang = 'ja-JP';
+    sample.rate = parseFloat($('rate').value) || 0.9;
+    speechSynthesis.speak(sample);
+  }
 });
 
 if ('serviceWorker' in navigator) {

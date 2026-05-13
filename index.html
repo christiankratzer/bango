@@ -13,7 +13,7 @@
 <body>
   <main>
     <header>
-      <h1>番号<span class="subtitle">bango</span></h1>
+      <h1>番号 <span class="flag" aria-hidden="true">🇯🇵</span><span class="subtitle">bango</span></h1>
     </header>
 
     <div id="voice-warning" class="warning hidden">
@@ -41,6 +41,10 @@
             <span>Full number (price style)</span>
           </label>
         </fieldset>
+        <label>
+          <span>Voice</span>
+          <select id="voice-select"></select>
+        </label>
         <label>
           <span>Speech speed: <output id="rate-out">0.9</output>×</span>
           <input type="range" id="rate" min="0.6" max="1.2" step="0.05" value="0.9">
