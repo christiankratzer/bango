@@ -361,9 +361,20 @@ function nextNumber(immediate = false) {
   }
 }
 
+// Accept user-friendly variants: strip non-digits, and drop leading zeros for
+// modes where zero-padding is just our canonical form (time/date/months).
+function normalizeAnswer(input) {
+  const digits = String(input).replace(/\D/g, '');
+  if (state.mode === 'time' || state.mode === 'date' || state.mode === 'months') {
+    return digits.replace(/^0+/, '') || '0';
+  }
+  return digits;
+}
+
 function handleAnswer(answer) {
   const ch = state.current;
-  if (answer === ch.answer) {
+  const match = normalizeAnswer(answer) === normalizeAnswer(ch.answer);
+  if (match) {
     state.queue.shift();
     playCorrect();
     $('feedback').textContent = '✓ ' + ch.display;
