@@ -1,4 +1,4 @@
-const CACHE = 'bango-v13';
+const CACHE = 'bango-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './styles.css',
   './manifest.webmanifest',
   './icon.svg',
+  './favicon.svg',
 ];
 
 self.addEventListener('install', (e) => {
