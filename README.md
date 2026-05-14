@@ -23,6 +23,8 @@ prices, room numbers, anything where you need to grab digits on the fly.
   sound files shipped.
 - PWA-installable. Works offline once cached (speech voices are local to the
   OS).
+- No analytics, no servers, no tracking. Your setup choices and preferred voice
+  are saved in your browser's `localStorage` and never leave your device.
 
 ## Voice support
 
