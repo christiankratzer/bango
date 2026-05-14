@@ -1,5 +1,6 @@
 const state = {
   queue: [],
+  challenges: [],
   current: null,
   mode: 'digits',
   rate: 0.9,
@@ -7,6 +8,7 @@ const state = {
   mistakes: 0,
   startTime: 0,
   voice: null,
+  locked: false,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -176,6 +178,7 @@ function daysInMonth(m) {
 }
 
 const WEEKDAY_KANJI = ['日', '月', '火', '水', '木', '金', '土'];
+const WEEKDAY_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // --- Challenge generators ---
 // Each returns { speech, answer, display }.
@@ -288,7 +291,7 @@ function challengeWeekday() {
   return {
     speech: `${WEEKDAY_KANJI[i]}曜日`,
     answer: String(i),
-    display: `${WEEKDAY_KANJI[i]}曜日`,
+    display: `${WEEKDAY_KANJI[i]}曜日 (${WEEKDAY_EN[i]})`,
   };
 }
 
@@ -349,13 +352,18 @@ function startSession(opts) {
   state.mode = opts.mode;
   state.rate = opts.rate;
   state.digitCount = opts.digitCount;
+  state.challenges = [];
   state.queue = [];
   for (let i = 0; i < opts.sequenceLength; i++) {
-    state.queue.push(generateChallenge());
+    const ch = generateChallenge();
+    ch.attempts = 0;
+    state.challenges.push(ch);
+    state.queue.push(ch);
   }
   state.total = opts.sequenceLength;
   state.mistakes = 0;
   state.startTime = Date.now();
+  state.locked = false;
 
   showScreen('trainer-screen');
   configureTrainerInput();
@@ -384,6 +392,7 @@ function nextNumber(immediate = false) {
     return;
   }
   state.current = state.queue[0];
+  state.locked = false;
   const done = state.total - state.queue.length;
   $('progress-text').textContent = `${done} / ${state.total}`;
   $('feedback').textContent = '';
@@ -408,8 +417,11 @@ function normalizeAnswer(input) {
 }
 
 function handleAnswer(answer) {
+  if (state.locked) return;
   const ch = state.current;
   const match = normalizeAnswer(answer) === normalizeAnswer(ch.answer);
+  state.locked = true;
+  ch.attempts++;
   if (match) {
     state.queue.shift();
     playCorrect();
@@ -429,14 +441,46 @@ function handleAnswer(answer) {
   }
 }
 
-function finishSession() {
+function finishSession(aborted = false) {
   const elapsed = Math.round((Date.now() - state.startTime) / 1000);
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
   const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
   const mistakeStr = state.mistakes === 1 ? '1 mistake' : `${state.mistakes} mistakes`;
-  $('stats').textContent = `${state.total} numbers in ${timeStr} with ${mistakeStr}.`;
+  const cleared = state.challenges.filter(c => c.attempts > 0 && !state.queue.includes(c)).length;
+  $('done-heading').textContent = aborted ? 'Stopped' : 'Done!';
+  $('stats').textContent = aborted
+    ? `${cleared} of ${state.total} in ${timeStr} with ${mistakeStr}.`
+    : `${state.total} numbers in ${timeStr} with ${mistakeStr}.`;
+  renderSummary(aborted);
   showScreen('done-screen');
+}
+
+function renderSummary(aborted = false) {
+  const list = $('summary-list');
+  list.innerHTML = '';
+  const items = aborted
+    ? state.challenges.filter(c => c.attempts > 0)
+    : state.challenges;
+  items.forEach((ch) => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'summary-row' + (ch.attempts > 1 ? ' had-mistakes' : '');
+    btn.addEventListener('click', () => speak(ch.speech));
+
+    const display = document.createElement('span');
+    display.className = 'summary-display';
+    display.textContent = ch.display;
+
+    const attempts = document.createElement('span');
+    attempts.className = 'summary-attempts';
+    attempts.textContent = ch.attempts === 1 ? '1 try' : `${ch.attempts} tries`;
+
+    btn.append(display, attempts);
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
 }
 
 $('setup-form').addEventListener('submit', (e) => {
@@ -479,7 +523,12 @@ $('replay-btn').addEventListener('click', () => {
 
 $('quit-btn').addEventListener('click', () => {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
-  showScreen('setup-screen');
+  const attempted = state.challenges.some(c => c.attempts > 0);
+  if (attempted) {
+    finishSession(true);
+  } else {
+    showScreen('setup-screen');
+  }
 });
 
 $('again-btn').addEventListener('click', () => {

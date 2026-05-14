@@ -1,4 +1,4 @@
-const CACHE = 'bango-v9';
+const CACHE = 'bango-v12';
 const ASSETS = [
   './',
   './index.html',
