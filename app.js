@@ -492,8 +492,29 @@ $('setup-form').addEventListener('submit', (e) => {
     mode: $('mode-select').value,
     rate: parseFloat($('rate').value) || 0.9,
   };
+  saveSettings(opts);
   startSession(opts);
 });
+
+const SETTINGS_KEY = 'bango.settings';
+
+function saveSettings(opts) {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(opts)); } catch {}
+}
+
+function restoreSettings() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch {}
+  if (!saved) return;
+  if (saved.mode) $('mode-select').value = saved.mode;
+  if (saved.digitCount) $('digit-count').value = saved.digitCount;
+  if (saved.sequenceLength) $('sequence-length').value = saved.sequenceLength;
+  if (saved.rate) {
+    $('rate').value = saved.rate;
+    $('rate-out').textContent = parseFloat(saved.rate).toFixed(2);
+  }
+}
+restoreSettings();
 
 function syncDigitCountVisibility() {
   const mode = $('mode-select').value;
