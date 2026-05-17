@@ -238,13 +238,10 @@ function challengeDate() {
   };
 }
 
-function challengePrice() {
-  // Weighted by magnitude so all three ranges get practiced.
-  const r = Math.random();
-  let amt;
-  if (r < 0.40) amt = randInt(100, 999);          // convenience-store range
-  else if (r < 0.75) amt = randInt(1000, 9999);   // restaurant / shopping
-  else amt = randInt(10000, 99999);               // hotel / bigger purchases
+function challengePrice(digits) {
+  const min = Math.pow(10, digits - 1);
+  const max = Math.pow(10, digits) - 1;
+  const amt = randInt(min, max);
   return {
     speech: `${amt}円`,
     answer: String(amt),
@@ -314,7 +311,7 @@ function generateChallenge() {
     case 'digits':   return challengeNumber(state.digitCount, true);
     case 'full':     return challengeNumber(state.digitCount, false);
     case 'phone':    return challengePhone();
-    case 'price':    return challengePrice();
+    case 'price':    return challengePrice(state.digitCount);
     case 'time':     return challengeTime();
     case 'date':     return challengeDate();
     case 'year':     return challengeYear();
@@ -331,7 +328,7 @@ function isWeekdayMode() { return state.mode === 'weekdays'; }
 function maxLengthForMode() {
   switch (state.mode) {
     case 'phone': return 11;
-    case 'price': return 5;
+    case 'price': return state.digitCount;
     case 'year': return 4;
     case 'time': return 4;
     case 'date': return 4;
@@ -536,7 +533,7 @@ restoreSettings();
 
 function syncDigitCountVisibility() {
   const mode = $('mode-select').value;
-  const showDigits = mode === 'digits' || mode === 'full';
+  const showDigits = mode === 'digits' || mode === 'full' || mode === 'price';
   $('digit-count-row').classList.toggle('hidden', !showDigits);
 }
 $('mode-select').addEventListener('change', syncDigitCountVisibility);
