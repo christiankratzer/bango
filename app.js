@@ -141,6 +141,20 @@ function playIncorrect() {
   if (navigator.vibrate) navigator.vibrate(120);
 }
 
+// Fanfare for a perfect session: quick rising pickup (ta-da-da), then a
+// sustained, brilliant C-major chord with octave + 10th on top.
+function playFanfare() {
+  playBell(523.25, 0.18, 0.00, 0.20);   // C5
+  playBell(659.25, 0.18, 0.10, 0.20);   // E5
+  playBell(783.99, 0.22, 0.20, 0.22);   // G5
+  playBell(523.25, 2.20, 0.42, 0.22);   // C5
+  playBell(659.25, 2.20, 0.42, 0.20);   // E5
+  playBell(783.99, 2.20, 0.42, 0.20);   // G5
+  playBell(1046.50, 2.50, 0.42, 0.28);  // C6 (lead)
+  playBell(1318.51, 2.50, 0.42, 0.20);  // E6 (sparkle)
+  if (navigator.vibrate) navigator.vibrate([45, 30, 45, 30, 60, 60, 400]);
+}
+
 function resolveVoice() {
   if (!('speechSynthesis' in window)) return null;
   const targetName = state.voice ? state.voice.name : null;
@@ -452,6 +466,10 @@ function finishSession(aborted = false) {
   $('stats').textContent = aborted
     ? `${cleared} of ${state.total} in ${timeStr} with ${mistakeStr}.`
     : `${state.total} numbers in ${timeStr} with ${mistakeStr}.`;
+  if (!aborted) {
+    if (state.mistakes === 0) playFanfare();
+    else playCorrect();
+  }
   renderSummary(aborted);
   showScreen('done-screen');
 }
